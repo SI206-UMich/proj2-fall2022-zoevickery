@@ -5,6 +5,7 @@ import os
 import csv
 import unittest
 
+#worked with: Izzy Johnson
 
 def get_listings_from_search_results(html_file):
     """
@@ -25,8 +26,47 @@ def get_listings_from_search_results(html_file):
         ('Loft in Mission District', 210, '1944564'),  # example
     ]
     """
+    f = open(html_file)
+    content = f.read()
+    soup = BeautifulSoup(content, 'html.parser')   
+
+    #tup_lst = []
+
+    title_tag_list = soup.find_all('div', class_ = "t1jojoys" )
+    title_list = []
+    for title in title_tag_list:
+        title_list.append(title.text)
+
+    cost_tag_list = soup.find_all('span', class_ = "a8jt5op")
+    cost_list = []
+    for cost in cost_tag_list:
+        cost_list.append(cost.text)
+    pattern = r'^\$(\d+)'
+    cost_list_int = []
+    for string in cost_list:
+        found = re.findall(pattern, string)
+        for found_cost in found:
+            cost_list_int.append(int(found_cost))
+
+    id_tag_list = soup.find_all('meta', itemprop="url")
+    id_link_list = []
+    for tag in id_tag_list:
+        id_link_list.append(tag.get('content', None))
+
+    id_pattern = r'^www.airbnb.com/rooms/[plus\/]*(\d+)\?'
+    id_list = []
+    for id_string in id_link_list:
+        found = re.findall(id_pattern, id_string)
+        for found_id in found:
+            id_list.append(found_id)
+
+    tup_lst = zip(title_list, cost_list_int, id_list)
+    tup_lst = list(tup_lst)
+    return tup_lst
+
     pass
 
+print(get_listings_from_search_results("html_files/mission_district_search_results.html"))
 
 def get_listing_information(listing_id):
     """
@@ -147,10 +187,11 @@ class TestCases(unittest.TestCase):
         # check that the variable you saved after calling the function is a list
         self.assertEqual(type(listings), list)
         # check that each item in the list is a tuple
-
+        ## TEST self.assertEqual(type(listings[0]), tuple)
         # check that the first title, cost, and listing id tuple is correct (open the search results html and find it)
-
+        ## TEST self.assertEqual(listing[0], ('Loft in Mission District', 210, '1944564'))
         # check that the last title is correct (open the search results html and find it)
+        ## TEST self.assertEqual(listing[-1], ('Guest suite in Mission District', 238, '32871760'))
         pass
 
     def test_get_listing_information(self):
@@ -238,8 +279,8 @@ class TestCases(unittest.TestCase):
         pass
 
 
-if __name__ == '__main__':
-    database = get_detailed_listing_database("html_files/mission_district_search_results.html")
-    write_csv(database, "airbnb_dataset.csv")
-    check_policy_numbers(database)
-    unittest.main(verbosity=2)
+#if __name__ == '__main__':
+    #database = get_detailed_listing_database("html_files/mission_district_search_results.html")
+    #write_csv(database, "airbnb_dataset.csv")
+    #check_policy_numbers(database)
+    #unittest.main(verbosity=2)
