@@ -101,30 +101,38 @@ def get_listing_information(listing_id):
 
     policy_number_tag = soup.find('li', class_ = "f19phm7j" )
     policy_number = policy_number_tag.text
-    pol_pattern = r'^Policy number: (\w*[\-]*\w*)'
+    pol_pattern = r'^Policy number: ((?:\w|\d)*[\-]*\d+\w*)'
     found_num = re.findall(pol_pattern, policy_number)
+    if len(found_num) == 0:
+        pol_pattern = r'Policy number: (?:P|p)ending'
+        found_num = re.findall(pol_pattern, policy_number)
+        if len(found_num) == 0:
+            policy_num = "exempt"
+        else:
+            policy_num = "pending"
+    else:
+        policy_num = found_num[0]
 
     place_type_tag = soup.find('h2', class_ = "_14i3z6h")
     place_type = place_type_tag.text
-    place_lst = []
     if place_type.split()[0] == "Private":
-        place_lst.append(place_type.split()[0])
+        place_type = "Private Room"
     elif place_type.split()[0] == "Shared":
-        place_lst.append(place_type.split()[0])
+        place_type = "Shared Room"
     else:
-        place_lst.append("Entire")
-    
+        place_type = "Entire Room"
+
     num_bedroom_tag_list = soup.find_all('span')
     bedroom_pattern = r'^(\d)\sbedroom'
-    bedroom_list = []
+    bedroom_num = ""
     for item in num_bedroom_tag_list:
         found = re.findall(bedroom_pattern, item.text)
         for found_bed in found:
-            bedroom_list.append(int(found_bed))
+            bedroom_num = (int(found_bed))
     
-    tup_lst_info = (found_num[0], place_lst[0], bedroom_list[0])
+    tup_lst_info = (policy_num, place_type, bedroom_num)
     return tup_lst_info
-    
+
     pass
 
 #print(get_listing_information("1623609"))
@@ -148,8 +156,19 @@ def get_detailed_listing_database(html_file):
         ...
     ]
     """
+    return_list = []
+    list_of_tups = get_listings_from_search_results(html_file)
+    for item in list_of_tups:
+        listing_id = item[2]
+        tup = get_listing_information(listing_id)
+        tup2 = (item[0], item[1], listing_id, tup[0], tup[1], tup[2])
+        return_list.append(tup2)
+    
+    return return_list
+
     pass
 
+#print(get_detailed_listing_database("html_files/mission_district_search_results.html"))
 
 def write_csv(data, filename):
     """
@@ -255,10 +274,12 @@ class TestCases(unittest.TestCase):
             # check that the third element in the tuple is an int
             self.assertEqual(type(listing_information[2]), int)
         # check that the first listing in the html_list has policy number 'STR-0001541'
-
+        self.assertEqual(listing_informations[0][0], "STR-0001541")
         # check that the last listing in the html_list is a "Private Room"
-
+        self.assertEqual(listing_informations[-1][1], "Private Room" )
         # check that the third listing has one bedroom
+        self.assertEqual(listing_informations[-1][2], 1)
+
 
         pass
 
@@ -272,12 +293,13 @@ class TestCases(unittest.TestCase):
             # assert each item in the list of listings is a tuple
             self.assertEqual(type(item), tuple)
             # check that each tuple has a length of 6
-
+            self.assertEqual(len(item), 6)
         # check that the first tuple is made up of the following:
         # 'Loft in Mission District', 210, '1944564', '2022-004088STR', 'Entire Room', 1
-
+        self.assertEqual(detailed_database[0], ('Loft in Mission District', 210, '1944564', '2022-004088STR', 'Entire Room', 1))
         # check that the last tuple is made up of the following:
         # 'Guest suite in Mission District', 238, '32871760', 'STR-0004707', 'Entire Room', 1
+        self.assertEqual(detailed_database[-1], ('Guest suite in Mission District', 238, '32871760', 'STR-0004707', 'Entire Room', 1))
 
         pass
 
@@ -319,8 +341,8 @@ class TestCases(unittest.TestCase):
         pass
 
 
-#if __name__ == '__main__':
-    #database = get_detailed_listing_database("html_files/mission_district_search_results.html")
-    #write_csv(database, "airbnb_dataset.csv")
-    #check_policy_numbers(database)
-    #unittest.main(verbosity=2)
+if __name__ == '__main__':
+    database = get_detailed_listing_database("html_files/mission_district_search_results.html")
+    write_csv(database, "airbnb_dataset.csv")
+    check_policy_numbers(database)
+    unittest.main(verbosity=2)
