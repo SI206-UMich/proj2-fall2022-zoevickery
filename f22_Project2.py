@@ -5,7 +5,7 @@ import os
 import csv
 import unittest
 
-#worked with: Izzy Johnson
+#worked with: Izzy Johnson, Reese Salgado
 
 def get_listings_from_search_results(html_file):
     """
@@ -30,8 +30,6 @@ def get_listings_from_search_results(html_file):
     content = f.read()
     soup = BeautifulSoup(content, 'html.parser')   
     f.close()
-
-    #tup_lst = []
 
     title_tag_list = soup.find_all('div', class_ = "t1jojoys" )
     title_list = []
@@ -67,7 +65,7 @@ def get_listings_from_search_results(html_file):
 
     pass
 
-print(get_listings_from_search_results("html_files/mission_district_search_results.html"))
+#print(get_listings_from_search_results("html_files/mission_district_search_results.html"))
 
 def get_listing_information(listing_id):
     """
@@ -94,13 +92,52 @@ def get_listing_information(listing_id):
     )
     """
 
+    f = open(f'html_files/listing_{listing_id}.html')
+    content = f.read()
+    soup = BeautifulSoup(content, 'html.parser')   
+    f.close()
+    
+    #print(content)
+
+    policy_number_tag = soup.find('li', class_ = "f19phm7j" )
+    policy_number = policy_number_tag.text
+    pol_pattern = r'^Policy number: (\w*[\-]*\w*)'
+    found_num = re.findall(pol_pattern, policy_number)
+
+    place_type_tag = soup.find('h2', class_ = "_14i3z6h")
+    place_type = place_type_tag.text
+    place_lst = []
+    if place_type.split()[0] == "Private":
+        place_lst.append(place_type.split()[0])
+    elif place_type.split()[0] == "Shared":
+        place_lst.append(place_type.split()[0])
+    else:
+        place_lst.append("Entire")
+    
+    num_bedroom_tag_list = soup.find_all('span')
+    bedroom_pattern = r'^(\d)\sbedroom'
+    bedroom_list = []
+    for item in num_bedroom_tag_list:
+        found = re.findall(bedroom_pattern, item.text)
+        for found_bed in found:
+            bedroom_list.append(int(found_bed))
+    
+    tup_lst_info = (found_num[0], place_lst[0], bedroom_list[0])
+    return tup_lst_info
+    
     pass
 
+#print(get_listing_information("1623609"))
+#print(get_listing_information("1944564"))
+#print(get_listing_information("1550913"))
+#print(get_listing_information("4616596"))
+#print(get_listing_information("6600081"))
+#print(get_listing_information("50010586"))
 
 def get_detailed_listing_database(html_file):
     """
     Write a function that calls the above two functions in order to return
-    the complete listing information using the functions you’ve created.
+    the complete listing information using the functions you've created.
     This function takes in a variable representing the location of the search results html file.
     The return value should be in this format:
 
