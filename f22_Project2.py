@@ -231,8 +231,39 @@ def check_policy_numbers(data):
     ]
 
     """
+    policy_num_list = []
+    for item in data:
+        new_tup = (item[2], item[3])
+        policy_num_list.append(new_tup)
+    
+    new_policy_list = []
+    for tup in policy_num_list:
+        if (tup[1] != "pending") and (tup[1] != "exempt") :
+            new_policy_list.append(tup)
+    
+    valid_pattern = r'20\d{2}-00\d{4}STR|STR-000\d{4}'
+    final_list = []
+    for tup in new_policy_list:
+        policy_num = tup[1]
+        found = re.findall(valid_pattern, policy_num)
+        for found_num in found:
+            final_list.append(found_num)
+   
+    invalid_list = []    
+    for tup in new_policy_list:
+        if tup[1] not in final_list:
+            invalid_list.append(tup)
+    
+    invalid_list_id = []
+    for tup in invalid_list:
+        return_val = tup[0]
+        invalid_list_id.append(return_val)
+    
+    return invalid_list_id
+
     pass
 
+#print(check_policy_numbers(get_detailed_listing_database("html_files/mission_district_search_results.html")))
 
 def extra_credit(listing_id):
     """
@@ -335,9 +366,9 @@ class TestCases(unittest.TestCase):
         # check that there are 21 lines in the csv
         self.assertEqual(len(csv_lines), 21)
         # check that the header row is correct
-        
-        # check that the next row is Private room in Mission District,82,51027324,Pending,Private Room,1
 
+        # check that the next row is Private room in Mission District,82,51027324,Pending,Private Room,1
+    
         # check that the last row is Apartment in Mission District,399,28668414,Pending,Entire Room,2
 
         pass
@@ -351,15 +382,16 @@ class TestCases(unittest.TestCase):
         # check that the return value is a list
         self.assertEqual(type(invalid_listings), list)
         # check that there is exactly one element in the string
-
+        
         # check that the element in the list is a string
-
+        self.assertEqual(type(invalid_listings[0]), str)
         # check that the first element in the list is '16204265'
+        self.assertEqual(invalid_listings[0], '16204265')
         pass
 
 
-if __name__ == '__main__':
-    database = get_detailed_listing_database("html_files/mission_district_search_results.html")
-    write_csv(database, "airbnb_dataset.csv")
-    check_policy_numbers(database)
-    unittest.main(verbosity=2)
+#if __name__ == '__main__':
+    #database = get_detailed_listing_database("html_files/mission_district_search_results.html")
+    #write_csv(database, "airbnb_dataset.csv")
+    #check_policy_numbers(database)
+    #unittest.main(verbosity=2)
