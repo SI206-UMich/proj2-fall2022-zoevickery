@@ -192,7 +192,24 @@ def write_csv(data, filename):
 
     This function should not return anything.
     """
+    sorted_data = sorted(data, key = lambda x: x[1])
+    
+    f = open(filename, "w")
+    header = "Listing Title,Cost,Listing ID,Policy Number,Place Type,Number of Bedrooms"
+
+    f.write(header + "\n")
+    for tup in sorted_data:
+        for i in range(len(tup)):
+            if i != (len(tup) - 1):
+                f.write(f'{tup[i]},')
+            else:
+                f.write(f'{tup[i]}\n')
+
+    f.close()
+
     pass
+
+#print(write_csv(get_detailed_listing_database("html_files/mission_district_search_results.html"),"proj2-vickery.csv"))
 
 
 def check_policy_numbers(data):
@@ -318,7 +335,7 @@ class TestCases(unittest.TestCase):
         # check that there are 21 lines in the csv
         self.assertEqual(len(csv_lines), 21)
         # check that the header row is correct
-
+        
         # check that the next row is Private room in Mission District,82,51027324,Pending,Private Room,1
 
         # check that the last row is Apartment in Mission District,399,28668414,Pending,Entire Room,2
