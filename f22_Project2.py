@@ -104,12 +104,13 @@ def get_listing_information(listing_id):
     pol_pattern = r'^Policy number: ((?:\w|\d)*[\-]*\d+\w*)'
     found_num = re.findall(pol_pattern, policy_number)
     if len(found_num) == 0:
-        pol_pattern = r'Policy number: (?:P|p)ending'
+        pol_pattern = r'Policy number: .*(?:P|p)ending'
         found_num = re.findall(pol_pattern, policy_number)
         if len(found_num) == 0:
-            policy_num = "exempt"
+            policy_num = "Exempt" 
         else:
-            policy_num = "pending"
+            policy_num = "Pending"
+        
     else:
         policy_num = found_num[0]
 
@@ -124,7 +125,7 @@ def get_listing_information(listing_id):
 
     num_bedroom_tag_list = soup.find_all('span')
     bedroom_pattern = r'^(\d)\sbedroom'
-    bedroom_num = ""
+    bedroom_num = 1
     for item in num_bedroom_tag_list:
         found = re.findall(bedroom_pattern, item.text)
         for found_bed in found:
@@ -141,6 +142,8 @@ def get_listing_information(listing_id):
 #print(get_listing_information("4616596"))
 #print(get_listing_information("6600081"))
 #print(get_listing_information("50010586"))
+#print(get_listing_information("28668414"))
+
 
 def get_detailed_listing_database(html_file):
     """
@@ -238,7 +241,7 @@ def check_policy_numbers(data):
     
     new_policy_list = []
     for tup in policy_num_list:
-        if (tup[1] != "pending") and (tup[1] != "exempt") :
+        if (tup[1] != "Pending") and (tup[1] != "Exempt") :
             new_policy_list.append(tup)
     
     valid_pattern = r'20\d{2}-00\d{4}STR|STR-000\d{4}'
@@ -366,11 +369,11 @@ class TestCases(unittest.TestCase):
         # check that there are 21 lines in the csv
         self.assertEqual(len(csv_lines), 21)
         # check that the header row is correct
-
+        self.assertEqual(csv_lines[0], ("Listing Title,Cost,Listing ID,Policy Number,Place Type,Number of Bedrooms").split(","))
         # check that the next row is Private room in Mission District,82,51027324,Pending,Private Room,1
-    
+        self.assertEqual(csv_lines[1], ("Private room in Mission District,82,51027324,Pending,Private Room,1").split(","))
         # check that the last row is Apartment in Mission District,399,28668414,Pending,Entire Room,2
-
+        self.assertEqual(csv_lines[-1], ("Apartment in Mission District,399,28668414,Pending,Entire Room,2").split(","))
         pass
 
     def test_check_policy_numbers(self):
@@ -382,7 +385,7 @@ class TestCases(unittest.TestCase):
         # check that the return value is a list
         self.assertEqual(type(invalid_listings), list)
         # check that there is exactly one element in the string
-        
+        self.assertEqual(len(invalid_listings), 1)
         # check that the element in the list is a string
         self.assertEqual(type(invalid_listings[0]), str)
         # check that the first element in the list is '16204265'
@@ -390,8 +393,8 @@ class TestCases(unittest.TestCase):
         pass
 
 
-#if __name__ == '__main__':
-    #database = get_detailed_listing_database("html_files/mission_district_search_results.html")
-    #write_csv(database, "airbnb_dataset.csv")
-    #check_policy_numbers(database)
-    #unittest.main(verbosity=2)
+if __name__ == '__main__':
+    database = get_detailed_listing_database("html_files/mission_district_search_results.html")
+    write_csv(database, "airbnb_dataset.csv")
+    check_policy_numbers(database)
+    unittest.main(verbosity=2)
